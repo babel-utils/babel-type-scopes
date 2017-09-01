@@ -1,0 +1,33 @@
+{
+  "name": "babel-type-scopes",
+  "version": "0.0.0",
+  "description": "Utils for looking up and working with Flow & TypeScript scopes in Babel",
+  "main": "index.js",
+  "repository": "babel-utils/babel-type-scopes",
+  "author": "James Kyle <me@thejameskyle.com>",
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "babel",
+    "utils",
+    "flow",
+    "typescript",
+    "scope",
+    "binding"
+  ],
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "babel-flow-types": "^1.2.1"
+  },
+  "devDependencies": {
+    "babel-core": "^7.0.0-alpha.19",
+    "babylon-options": "^1.1.2",
+    "flow-bin": "^0.53.1",
+    "jest": "^20.0.4",
+    "jest-in-case": "^1.0.1"
+  }
+}
