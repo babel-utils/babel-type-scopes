@@ -1,6 +1,6 @@
 {
   "name": "babel-type-scopes",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Utils for looking up and working with Flow & TypeScript scopes in Babel",
   "main": "index.js",
   "repository": "babel-utils/babel-type-scopes",
