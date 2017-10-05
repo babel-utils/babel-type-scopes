@@ -41,7 +41,9 @@ function isTypeParam(path) {
 }
 
 function isTypeScope(path /*: Path */) {
-  return path.isScope() || path.isFunctionTypeAnnotation() || isTypeDeclaration(path);
+  return (
+    path.isScope() || path.isFunctionTypeAnnotation() || isTypeDeclaration(path)
+  );
 }
 
 function ownBindingsCollector(path, collect) {
@@ -54,13 +56,15 @@ function ownBindingsCollector(path, collect) {
 
 function getOwnTypeBindings(path /*: Path */) {
   if (!isTypeScope(path)) {
-    throw new Error('Must pass valid type scope path using getClosestTypeScope()');
+    throw new Error(
+      'Must pass valid type scope path using getClosestTypeScope()'
+    );
   }
 
   let bindings = {};
 
   function collect(kind, path, id) {
-    bindings[path.node.name] = {kind, path, id};
+    bindings[path.node.name] = { kind, path, id };
   }
 
   if (isTypeExpression(path) && path.node.id) {
@@ -70,7 +74,7 @@ function getOwnTypeBindings(path /*: Path */) {
   path.traverse({
     enter(path) {
       ownBindingsCollector(path, collect);
-    },
+    }
   });
 
   return bindings;
@@ -80,10 +84,10 @@ function getTypeBinding(path /*: Path */, name /*: string */) /*: Binding */ {
   let searching = path;
 
   do {
-    searching = getClosestTypeScopePath(searching);
+    searching = getClosestTypeScope(searching);
     let bindings = getOwnTypeBindings(searching);
     if (bindings[name]) return bindings[name];
-  } while (searching = searching.parentPath);
+  } while ((searching = searching.parentPath));
 
   return null;
 }
@@ -96,5 +100,5 @@ module.exports = {
   isTypeScope,
   getClosestTypeScope,
   getOwnTypeBindings,
-  getTypeBinding,
+  getTypeBinding
 };
