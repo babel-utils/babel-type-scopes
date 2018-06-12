@@ -10,7 +10,46 @@ type Binding = {
 type Bindings = {
   [name: string]: Binding,
 };
+
+type Visitor = {
+  [method: string]: (path: Path, state: { bindings: Bindings }) => void;
+};
 */
+let getId = (kind, path, bindings) => {
+  if (path.node.id) {
+    let id = path.get('id');
+    bindings[id.node.name] = {kind, path: id};
+  }
+};
+
+let visitor /*: Visitor */  = {
+  Scope(path) {
+    path.skip();
+  },
+
+  Declaration(path, state) {
+    if (
+      isTypeDeclaration(path)
+    ) {
+      getId('declaration', path, state.bindings);
+    }
+
+    if (!path.isImportDeclaration() && !path.isExportDeclaration()) {
+      path.skip();
+    }
+  },
+
+  TypeParameter(path, state) {
+    state.bindings[path.node.name] = {kind: 'param', path};
+  },
+
+  'ImportSpecifier|ImportDefaultSpecifier'(path, state) {
+    let importKind = path.node.importKind || path.parent.importKind;
+    if (importKind !== 'type' && importKind !== 'typeof') return;
+    let local = path.get('local');
+    state.bindings[local.node.name] = {kind: 'import', path: local};
+  },
+};
 
 function isTypeImport(path) {
   if (!path.isImportSpecifier() && !path.isImportDefaultSpecifier()) {
@@ -28,7 +67,8 @@ function isTypeDeclaration(path) {
     path.isInterfaceDeclaration() ||
     path.type === 'TSTypeAliasDeclaration' ||
     path.type === 'TSInterfaceDeclaration' ||
-    path.type === 'TSEnumDeclaration'
+    path.type === 'TSEnumDeclaration' ||
+    path.type === 'TSModuleDeclaration'
   );
 }
 
@@ -41,15 +81,13 @@ function isTypeParam(path) {
 }
 
 function isTypeScope(path /*: Path */) {
-  return path.isScope() || path.isFunctionTypeAnnotation() || isTypeDeclaration(path);
-}
-
-function ownBindingsCollector(path, collect) {
-  if (path.isImportDeclaration() || path.isTypeParameterDeclaration()) return;
-  if (isTypeImport(path)) collect('import', path, path.get('local'));
-  if (isTypeDeclaration(path)) collect('declaration', path, path.get('id'));
-  if (isTypeParam(path)) collect('param', path, path);
-  path.skip();
+  return (
+    path.isScope() ||
+    path.isFunctionTypeAnnotation() ||
+    path.isTypeAlias() ||
+    path.isInterfaceDeclaration() ||
+    isTypeDeclaration(path)
+  );
 }
 
 function getOwnTypeBindings(path /*: Path */) {
@@ -59,19 +97,11 @@ function getOwnTypeBindings(path /*: Path */) {
 
   let bindings = {};
 
-  function collect(kind, path, id) {
-    bindings[path.node.name] = {kind, path, id};
-  }
-
   if (isTypeExpression(path) && path.node.id) {
-    collect('expression', path, path.get('id'));
+    getId('expression', path, bindings);
+  } else {
+    path.traverse(visitor, { bindings });
   }
-
-  path.traverse({
-    enter(path) {
-      ownBindingsCollector(path, collect);
-    },
-  });
 
   return bindings;
 }
@@ -80,7 +110,7 @@ function getTypeBinding(path /*: Path */, name /*: string */) /*: Binding */ {
   let searching = path;
 
   do {
-    searching = getClosestTypeScopePath(searching);
+    searching = getClosestTypeScope(searching);
     let bindings = getOwnTypeBindings(searching);
     if (bindings[name]) return bindings[name];
   } while (searching = searching.parentPath);
