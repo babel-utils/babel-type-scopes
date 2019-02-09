@@ -12,13 +12,13 @@ function parse(code, plugins) {
 function getAllOwnBindings(code, plugins) {
   let path = parse(code, plugins);
   let scopes = [];
-  
+
   function visit(path) {
     if (isTypeScope(path)) {
       let bindings = getOwnTypeBindings(path);
 
       scopes.push(Object.keys(bindings).map(name => {
-          return `${name}:${bindings[name].kind}`;
+        return `${name}:${bindings[name].kind}`;
       }));
     }
   }
@@ -26,7 +26,7 @@ function getAllOwnBindings(code, plugins) {
   babel.traverse(path, {
     enter(path) {
       visit(path);
-    }
+    },
   });
 
   return scopes;
