@@ -23,10 +23,6 @@ let getId = (kind, path, bindings) => {
 };
 
 let visitor /*: Visitor */  = {
-  Scope(path) {
-    path.skip();
-  },
-
   Declaration(path, state) {
     if (
       isTypeDeclaration(path)
@@ -39,8 +35,14 @@ let visitor /*: Visitor */  = {
     }
   },
 
-  TypeParameter(path, state) {
+  TSTypeParameter(path, state) {
     state.bindings[path.node.name] = {kind: 'param', path};
+  },
+
+  TypeParameterDeclaration(path, state) {
+    for (const param of path.node.params) {
+      state.bindings[param.name] = {kind: 'param', path};
+    }
   },
 
   'ImportSpecifier|ImportDefaultSpecifier'(path, state) {
